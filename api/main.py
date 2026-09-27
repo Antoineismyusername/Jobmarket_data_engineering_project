@@ -115,7 +115,30 @@ def get_offers_by_city(city_request: CityRequest, authorization: str = Header(No
 
 @app.post("/offers/category")
 def get_offers_by_category(category_request: CategoryRequest, authorization: str = Header(None)):
-
+    """
+    A : Agriculture / Pêche / Espaces verts et naturels / Soins aux animaux\n
+    B : Arts / Artisanat d’art\n
+    C : Banque / Assurance\n
+    C15 : Immobilier\n
+    D : Commerce / Vente\n
+    E : Communication / Multimédia\n
+    F : Bâtiment / Travaux Publics\n
+    G : Hôtellerie - Restauration / Tourisme / Animation\n
+    H : Industrie\n
+    I : Installation / Maintenance\n
+    J : Santé\n
+    K : Services à la personne / à la collectivité\n
+    L : Spectacle\n
+    L14 : Sport\n
+    M : Achats / Comptabilité / Gestion\n
+    M13 : Direction d'entreprise\n
+    M14 : Conseil / Etudes\n
+    M15 : Ressources Humaines\n
+    M16 : Secrétariat / Assistanat\n
+    M17 : Marketing / Stratégie commerciale\n
+    M18 : Informatique / Télécommunication\n
+    N : Transport / Logistique\n
+    """
     authenticate(authorization)
 
     collection = get_collection()
