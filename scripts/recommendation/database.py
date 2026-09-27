@@ -53,5 +53,5 @@ def load_offers():
     return pd.DataFrame(offers)
 
 # test du script
-#if __name__ == "__main__":
+if __name__ == "__main__":
     print("Longueur du DataFrame : ", len(load_offers()))

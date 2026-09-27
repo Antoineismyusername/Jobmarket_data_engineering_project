@@ -4,11 +4,12 @@ from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-# test du wordcloud
 import matplotlib.pyplot as plt
 from wordcloud import WordCloud
 
+
 french_stopwords = stopwords.words("french")
+
 
 def build_tfidf_matrix(df: pd.DataFrame):
     """
@@ -34,8 +35,9 @@ def recommend(
     vectorizer,
     tfidf_matrix,
     keywords: str,
+    locationCity: str | None = None,
     locationDepartment: str | None = None,
-    categoryLabel: str | None = None,
+    category: str | None = None,
     top_n: int = 10,
 ):
     """
@@ -51,8 +53,7 @@ def recommend(
     # Transformation des préférences utilisateur
     user_vector = vectorizer.transform([keywords])
 
-    # Calcul de la similarité entre l'utilisateur
-    # et chacune des offres
+    # Calcul de la similarité
     similarities = cosine_similarity(
         user_vector,
         tfidf_matrix,
@@ -62,17 +63,23 @@ def recommend(
 
     results["score"] = similarities
 
-    # Filtre géographique
+    # Filtre sur la ville
+    if locationCity is not None:
+
+        results = results[results["locationCity"].str.lower()== locationCity.lower()]
+
+
+    # Filtre sur le département
     if locationDepartment is not None:
-        results = results[
-            results["locationDepartment"] == locationDepartment
-        ]
+
+        results = results[results["locationDepartment"]== locationDepartment]
+
 
     # Filtre sur le grand domaine
-    if categoryLabel is not None:
-        results = results[
-            results["categoryLabel"] == categoryLabel
-        ]
+    if category is not None:
+
+        results = results[results["category"]== category]
+
 
     # Classement du score le plus élevé au plus faible
     results = results.sort_values(
@@ -82,7 +89,9 @@ def recommend(
 
     return results.head(top_n)
 
+
 def show_wordcloud(df):
+
     text = " ".join(df["text"].dropna())
 
     wordcloud = WordCloud(
@@ -93,8 +102,15 @@ def show_wordcloud(df):
         collocations=False,
         min_word_length=3
     ).generate(text)
-    
-    plt.imshow(wordcloud, interpolation="bilinear")
+
+    plt.imshow(
+        wordcloud,
+        interpolation="bilinear"
+    )
+
     plt.axis("off")
 
-    plt.savefig("wordcloud.png", bbox_inches="tight")
+    plt.savefig(
+        "wordcloud.png",
+        bbox_inches="tight"
+    )
