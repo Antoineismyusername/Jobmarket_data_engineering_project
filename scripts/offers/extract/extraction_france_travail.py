@@ -25,7 +25,13 @@ RAW_DIR = Path("data/raw/france_travail")
 
 RANGE_SIZE = 150
 DELAY = 0.25
+# Limite de sécurité conservée du script initial (pas une garantie de l'API).
 MAX_RANGE_END = 12000
+
+GRANDS_DOMAINES = [
+    "A", "B", "C", "C15", "D", "E", "F", "G", "H", "I", "J", "K",
+    "L", "L14", "M", "M13", "M14", "M15", "M16", "M17", "M18", "N"
+]
 
 LOG_DIR = Path("logs")
 LOG_DIR.mkdir(parents=True, exist_ok=True)
@@ -93,7 +99,7 @@ def get_offers(token, querystring):
 
 # ----- Enregistrement des données brutes
 
-def save_raw_response(response, timestamp, start, end):
+def save_raw_response(response, timestamp, grand_domaine, start, end):
     """
     Enregistre une tranche de résultats de l'API France Travail.
     """
@@ -101,7 +107,7 @@ def save_raw_response(response, timestamp, start, end):
 
     file_path = (
         RAW_DIR
-        / f"france_travail_{timestamp}_range_{start:04d}_{end:04d}.json"
+        / f"france_travail_{timestamp}_{grand_domaine}_range_{start:04d}_{end:04d}.json"
     )
 
     data = response.json()
@@ -151,103 +157,110 @@ def get_json_keys(data, prefix=""):
 
 def main():
 
-    logger.info("Début de l'extraction France Travail.")
-
-    querystring = {
-        "grandDomaine": "N",
-        "departement": "34"
-    }
-
-    token = get_access_token()
+    logger.info("Début de l'extraction France Travail, tous domaines.")
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-
     all_keys = set()
     total_downloaded = 0
+    incomplete_domains = []
 
-    for start in range(0, MAX_RANGE_END + 1, RANGE_SIZE):
+    for grand_domaine in GRANDS_DOMAINES:
 
-        end = min(
-            start + RANGE_SIZE - 1,
-            MAX_RANGE_END
-        )
+        print(f"\nExtraction du domaine {grand_domaine}")
+        logger.info("Début du domaine %s.", grand_domaine)
 
-        querystring["range"] = f"{start}-{end}"
+        querystring = {
+            "grandDomaine": grand_domaine,
+            "departement": "34"
+        }
 
-        response = get_offers(
-            token,
-            querystring
-        )
+        # Un token récent pour chaque domaine.
+        token = get_access_token()
+        domain_downloaded = 0
 
-        data = response.json()
-        offers = data.get("resultats", [])
+        # La pagination recommence à zéro pour chaque domaine.
+        for start in range(0, MAX_RANGE_END + 1, RANGE_SIZE):
 
-        total_downloaded += len(offers)
+            end = min(start + RANGE_SIZE - 1, MAX_RANGE_END)
+            querystring["range"] = f"{start}-{end}"
 
-        all_keys.update(
-            get_json_keys(offers)
-        )
+            response = get_offers(token, querystring)
+            time.sleep(DELAY)
 
-        file_path = save_raw_response(
-            response,
-            timestamp,
-            start,
-            end
-        )
-
-        print(
-            f"Range {start}-{end} : "
-            f"{len(offers)} offres récupérées "
-            f"(HTTP {response.status_code})"
-        )
-
-        print(
-            f"Content-Range : "
-            f"{response.headers.get('Content-Range')}"
-        )
-
-        print(
-            f"Total récupéré : {total_downloaded}"
-        )
-
-        logger.info(
-            "Range %s-%s : %s offres récupérées (HTTP %s) - total : %s.",
-            start,
-            end,
-            len(offers),
-            response.status_code,
-            total_downloaded
-        )
-
-        # HTTP 200 : tous les résultats ont été parcourus.
-        # HTTP 206 : il reste des résultats.
-        content_range = response.headers.get("Content-Range")
-
-        if content_range:
-            total_results = int(content_range.split("/")[-1])
-
-            if total_downloaded >= total_results:
-                logger.info(
-                    "Toutes les offres disponibles ont été récupérées (%s).",
-                    total_results
-                )
+            if response.status_code == 204:
+                logger.info("Domaine %s : aucune offre restante (204).", grand_domaine)
                 break
 
-        time.sleep(DELAY)
+            data = response.json()
+            offers = data.get("resultats", [])
 
-    print(
-        f"\nExtraction terminée : "
-        f"{total_downloaded} offres récupérées."
-    )
+            if not offers:
+                logger.info("Domaine %s : page vide, fin du parcours.", grand_domaine)
+                break
 
-    logger.info(
-        "Extraction France Travail terminée : %s offres récupérées.",
-        total_downloaded
-    )
+            domain_downloaded += len(offers)
+            total_downloaded += len(offers)
+            all_keys.update(get_json_keys(offers))
 
-    # Optionnel : affichage de toutes les clés rencontrées
-    #for key in sorted(all_keys):
-    #    print(key)
+            save_raw_response(
+                response,
+                timestamp,
+                grand_domaine,
+                start,
+                end
+            )
+
+            print(
+                f"Domaine {grand_domaine} | Range {start}-{end} : "
+                f"{len(offers)} offres | "
+                f"Total du domaine : {domain_downloaded}"
+            )
+
+            logger.info(
+                "Domaine %s | Range %s-%s : %s offres | Total domaine : %s.",
+                grand_domaine, start, end, len(offers), domain_downloaded
+            )
+
+            content_range = response.headers.get("Content-Range", "")
+            total_text = content_range.rsplit("/", 1)[-1]
+
+            if total_text.isdigit():
+                total_results = int(total_text)
+
+                if domain_downloaded >= total_results:
+                    break
+
+            # Sans total exploitable, HTTP 200 signale une réponse complète.
+            elif response.status_code == 200:
+                break
+
+        else:
+            # Ce bloc s'exécute seulement si la limite est atteinte sans break.
+            incomplete_domains.append(grand_domaine)
+            logger.warning(
+                "Domaine %s : limite MAX_RANGE_END atteinte, extraction incomplète.",
+                grand_domaine
+            )
+
+        print(f"Domaine {grand_domaine} terminé : {domain_downloaded} offres.")
+        logger.info("Fin du domaine %s : %s offres.", grand_domaine, domain_downloaded)
+
+    # Ne pas présenter comme réussie une extraction arrêtée par notre limite.
+    if incomplete_domains:
+        raise RuntimeError(
+            "Extraction incomplète : limite de pagination atteinte pour "
+            + ", ".join(incomplete_domains)
+        )
+
+    print(f"\nExtraction terminée : {total_downloaded} offres récupérées au total.")
+    logger.info("Extraction terminée : %s offres au total.", total_downloaded)
+
+    # Le total compte les résultats reçus, pas les identifiants uniques.
+    # Les éventuels doublons sont traités par le chargeur MongoDB.
+
+    # Optionnel : affichage de toutes les clés rencontrées.
+    # for key in sorted(all_keys):
+    #     print(key)
 
 
 if __name__ == "__main__":
