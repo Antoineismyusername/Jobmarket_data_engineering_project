@@ -98,7 +98,7 @@ def get_offers_by_city(city_request: CityRequest, authorization: str = Header(No
 
         city = offer.get("locationCity")
 
-        if city.lower() == city_request.city.lower():
+        if city and city.lower() == city_request.city.lower():
             matching_offers.append(offer)
 
         if len(matching_offers) >= city_request.limit:

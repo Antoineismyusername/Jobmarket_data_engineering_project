@@ -1,12 +1,29 @@
 import base64
-import os
+from unittest.mock import Mock
+
+import pytest
 
 from fastapi.testclient import TestClient
 
 from api.main import app
 
-os.environ["API_USERNAME"] = "testuser"
-os.environ["API_PASSWORD"] = "testpass"
+@pytest.fixture(autouse=True)
+def fake_database(monkeypatch):
+    # Identifiants fictifs, valables uniquement pendant chaque test.
+    monkeypatch.setenv("API_USERNAME", "testuser")
+    monkeypatch.setenv("API_PASSWORD", "testpass")
+
+    # Cette collection en mémoire remplace MongoDB pendant les tests.
+    collection = Mock()
+    collection.find.return_value = [
+        {"title": "Développeur Python", "locationCity": "Montpellier"},
+        {"title": "Data engineer", "locationCity": "Toulouse"},
+        {"title": "Boulanger", "locationCity": "Montpellier"},
+    ]
+
+    # Remplacer la fonction à l'endroit où l'API l'utilise.
+    # pytest annule automatiquement ce remplacement après chaque test.
+    monkeypatch.setattr("api.main.get_collection", lambda: collection)
 
 
 client = TestClient(app)
@@ -16,7 +33,7 @@ AUTH_HEADERS = {"Authorization": f"Basic {credentials}"}
 
 
 def test_home():
-    response = client.get("/", headers=AUTH_HEADERS)
+    response = client.get("/")
     assert response.status_code == 200
 
 def test_wrong_authentication():
@@ -25,9 +42,10 @@ def test_wrong_authentication():
     wrong_headers = {"Authorization": f"Basic {wrong_credentials}"}
 
     response = client.post(
-        "/offers/city", 
+        "/offers/city",
         json={"city": "montpellier", "limit": 10},
-        headers=wrong_headers)
+        headers=wrong_headers,
+    )
 
     assert response.status_code == 422
 
@@ -43,3 +61,4 @@ def test_offers_by_city():
     assert response.status_code == 200
     assert "count" in data
     assert data["count"] <= 10
+    assert all(offer["locationCity"] == "Montpellier" for offer in data["offers"])
