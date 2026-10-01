@@ -35,4 +35,4 @@ jobs:
         run: python -m compileall -q api scripts tests
 
       - name: Lancer les tests
-        run: pytest -q
+        run: python -m pytest -q
