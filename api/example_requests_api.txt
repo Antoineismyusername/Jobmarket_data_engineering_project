@@ -1,0 +1,61 @@
+.1. LANCER L'API 
+
+python -m uvicorn api.main:app --host 0.0.0.0 --port 8000
+
+
+2. PRÉPARER LES REQUÊTES 
+
+Exporter les identifiants dans le terminal.
+-u construit ensuite automatiquement le header Authorization: Basic …
+
+
+3. ACCUEIL — GET / (SANS AUTHENTIFICATION)
+
+curl "http://127.0.0.1:8000"
+
+
+4. OFFRES PAR VILLE — POST /offers/city
+
+curl -X POST "http://127.0.0.1:8000/offers/city" \
+  -u "$API_USERNAME:$API_PASSWORD" \
+  -H "Content-Type: application/json" \
+  -d '{"city":"Montpellier","limit":5}'
+
+Attendu : HTTP 200, avec les champs city, count et offers.
+
+
+5. OFFRES PAR CATÉGORIE — POST /offers/category
+
+curl -X POST "http://127.0.0.1:8000/offers/category" \
+  -u "$API_USERNAME:$API_PASSWORD" \
+  -H "Content-Type: application/json" \
+  -d '{"category":"M18","limit":5}'
+
+M18 correspond à Informatique / Télécommunication.
+Attendu : HTTP 200, avec les champs category, count et offers.
+
+
+6. RECOMMANDATIONS — POST /recommendations
+
+curl -X POST "http://127.0.0.1:8000/recommendations" \
+  -u "$API_USERNAME:$API_PASSWORD" \
+  -H "Content-Type: application/json" \
+  -d '{"keywords":"python sql data","top_n":5}'
+
+------
+
+Variante avec les filtres facultatifs city, department et category :
+
+curl -X POST "http://127.0.0.1:8000/recommendations" \
+  -u "$API_USERNAME:$API_PASSWORD" \
+  -H "Content-Type: application/json" \
+  -d '{"keywords":"python sql data","city":"Montpellier","department":"34","category":"M18","top_n":5}'
+
+
+7. ABSENCE D'AUTHENTIFICATION 
+
+curl -X POST "http://127.0.0.1:8000/offers/city" \
+  -H "Content-Type: application/json" \
+  -d '{"city":"Montpellier","limit":5}'
+
+Attendu : HTTP 422 et {"detail":"Authentification incorrecte."}.
