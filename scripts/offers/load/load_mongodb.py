@@ -27,10 +27,8 @@ load_dotenv(PROJECT_ROOT / ".env")
 
 
 def get_collection():
-    client = MongoClient(
-        host=os.getenv("MONGO_HOST"),
-        port=int(os.getenv("MONGO_PORT")),
-    )
+    client = MongoClient(os.getenv("MONGO_ATLAS_URI"))
+   # client = MongoClient(host=os.getenv("MONGO_HOST"),port=int(os.getenv("MONGO_PORT")),)
 
     db_name = os.getenv("MONGO_DB")
     db = client[db_name]
