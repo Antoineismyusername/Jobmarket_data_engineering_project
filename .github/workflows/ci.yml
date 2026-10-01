@@ -1,0 +1,38 @@
+name: CI JobMarket
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v6
+
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Installer les dépendances
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Télécharger les données NLTK nécessaires
+        run: python -m nltk.downloader stopwords
+
+      - name: Vérifier la syntaxe Python
+        run: python -m compileall -q api scripts tests
+
+      - name: Lancer les tests
+        run: pytest -q

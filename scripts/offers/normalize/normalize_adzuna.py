@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from mappings.departments import get_department_code
+from scripts.offers.normalize.mappings.departments import get_department_code
 
 RAW_DIR = Path("data/raw/adzuna")
 PROCESSED_DIR = Path("data/processed/adzuna")

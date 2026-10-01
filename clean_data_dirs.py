@@ -1,7 +1,7 @@
 from pathlib import Path
 
-
-DATA_DIR = Path("data")
+PROJECT_ROOT = Path(__file__).resolve().parent
+DATA_DIR = PROJECT_ROOT / "data"
 DIRS_TO_CLEAN = [
     DATA_DIR / "raw",
     DATA_DIR / "processed",
