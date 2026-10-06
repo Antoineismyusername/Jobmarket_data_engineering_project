@@ -25,7 +25,7 @@ RAW_DIR = Path("data/raw/france_travail")
 
 RANGE_SIZE = 150
 DELAY = 0.25
-# Limite de sécurité conservée du script initial (pas une garantie de l'API).
+# Limite de sécurité conservée du script initial.
 MAX_RANGE_END = 12000
 
 GRANDS_DOMAINES = [

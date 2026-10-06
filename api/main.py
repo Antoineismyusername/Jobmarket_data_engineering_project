@@ -98,7 +98,7 @@ def get_offers_by_city(city_request: CityRequest, authorization: str = Header(No
 
         city = offer.get("locationCity")
 
-        if city and city.lower() == city_request.city.lower():
+        if city.lower() == city_request.city.lower():
             matching_offers.append(offer)
 
         if len(matching_offers) >= city_request.limit:
@@ -176,7 +176,6 @@ def get_offers_by_category(category_request: CategoryRequest, authorization: str
 def get_recommendations(recommendation_request: RecommendationRequest, authorization: str = Header(None)):
 
     authenticate(authorization)
-
     collection = get_collection()
 
     try:
@@ -195,3 +194,52 @@ def get_recommendations(recommendation_request: RecommendationRequest, authoriza
         "count": len(recommendations),
         "recommendations": recommendations
     }
+
+# ----- Statistiques sur l'ensemble de la collection
+
+@app.get("/stats")
+def get_stats(authorization: str = Header(None)):
+
+    authenticate(authorization)
+    collection = get_collection()
+
+    def distribution(field, limit=None):
+
+        pipeline = [
+            {
+                "$group": {
+                    "_id": {"$toLower": {"$ifNull": ["$" + field, ""]}},
+                    "count": {"$sum": 1}
+                }
+            },
+            {"$sort": {"count": -1, "_id": 1}},
+            {
+                "$project": {
+                    "_id": 0,
+                    "name": {
+                        "$cond": [
+                            {"$eq": ["$_id", ""]},
+                            "Non renseigné",
+                            "$_id"
+                        ]
+                    },
+                    "count": 1
+                }
+            }
+        ]
+
+        if limit is not None:
+            pipeline.append({"$limit": limit})
+
+        return list(collection.aggregate(pipeline))
+
+    try:
+        return {
+            "total_offers": collection.count_documents({}),
+            "categories": distribution("categoryLabel"),
+            "companies": distribution("company", 10),
+            "cities": distribution("locationCity", 10),
+            "sources": distribution("source")
+        }
+    finally:
+        collection.database.client.close()

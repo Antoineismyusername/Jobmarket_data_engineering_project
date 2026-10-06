@@ -17,7 +17,7 @@ SEARCH_URL = "https://api.adzuna.com/v1/api/jobs/fr/search"
 RAW_DIR = Path("data/raw/adzuna")
 
 RESULTS_PER_PAGE = 50
-DELAY = 3
+DELAY = 2
 
 START_PAGE = 1
 
