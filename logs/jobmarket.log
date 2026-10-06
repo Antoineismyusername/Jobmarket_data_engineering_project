@@ -2192,3 +2192,14 @@
 2026-10-01 13:55:25,013 - load_mongodb - WARNING - 50 doublon(s) ignoré(s) dans /home/antoine/jul26_bde_jobmarket/data/processed/adzuna/adzuna_20260908_100920_page_224.json.
 2026-10-01 13:55:25,084 - load_mongodb - INFO - 0 offres insérées depuis /home/antoine/jul26_bde_jobmarket/data/processed/adzuna/adzuna_20260908_100920_page_225.json.
 2026-10-01 13:55:25,084 - load_mongodb - WARNING - 50 doublon(s) ignoré(s) dans /home/antoine/jul26_bde_jobmarket/data/processed/adzuna/adzuna_20260908_100920_page_225.json.
+2026-10-02 09:56:27,141 - load_mongodb - INFO - Collection MongoDB sélectionnée : job_market.offers
+2026-10-02 10:01:33,511 - load_mongodb - INFO - Collection MongoDB sélectionnée : job_market.offers
+2026-10-02 10:08:07,462 - load_mongodb - INFO - Collection MongoDB sélectionnée : job_market.offers
+2026-10-02 10:09:04,257 - load_mongodb - INFO - Collection MongoDB sélectionnée : job_market.offers
+2026-10-02 10:09:26,290 - load_mongodb - INFO - Collection MongoDB sélectionnée : job_market.offers
+2026-10-02 10:10:55,851 - load_mongodb - INFO - Collection MongoDB sélectionnée : job_market.offers
+2026-10-02 10:13:16,915 - load_mongodb - INFO - Collection MongoDB sélectionnée : job_market.offers
+2026-10-05 08:16:26,101 - load_mongodb - INFO - Collection MongoDB sélectionnée : job_market.offers
+2026-10-05 08:24:56,250 - load_mongodb - INFO - Collection MongoDB sélectionnée : job_market.offers
+2026-10-05 08:31:21,624 - load_mongodb - INFO - Collection MongoDB sélectionnée : job_market.offers
+2026-10-05 08:31:38,727 - load_mongodb - INFO - Collection MongoDB sélectionnée : job_market.offers
